@@ -1,92 +1,52 @@
-import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ArrowLeft, Zap } from "lucide-react"
 import { getAllChores, getChoreBySlug } from "@/lib/chores"
 import Mdx from "@/components/Mdx"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 
-export const dynamic = "force-static"
-export const revalidate = 60 * 60 * 24 // daily
+// ✅ Next 15: use a literal number, not an expression
+export const revalidate = 86400 // 24 hours
+
+// If you have this anywhere, REMOVE it (Next 15 complains about config objects):
+// export const config = { revalidate: 60 * 60 * 24 }
 
 export async function generateStaticParams() {
   const chores = getAllChores()
   return chores.map((c) => ({ slug: c.slug }))
 }
 
-export default function ChorePage({ params }: { params: { slug: string } }) {
-  const chores = getAllChores()
-  const exists = chores.some((c) => c.slug === params.slug)
-  if (!exists) return notFound()
+// ✅ Next 15: params is a Promise in PageProps typing
+export default async function ChorePage({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}) {
+  const { slug } = await params
 
-  const { meta, content } = getChoreBySlug(params.slug)
+  const data = getChoreBySlug(slug)
+  if (!data) return notFound()
+
+  const { meta, content } = data
 
   return (
-    <main className="min-h-screen px-4 py-6">
-      <div className="mx-auto max-w-3xl">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft size={16} />
-          Back to checklist
-        </Link>
+    <main className="mx-auto max-w-3xl px-4 py-6">
+      <div className="rounded-2xl border border-border bg-white p-5">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-muted-foreground">
+            {meta.frequency}
+          </span>
+          <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-muted-foreground">
+            {meta.estimateMinutes}m
+          </span>
+          <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-muted-foreground">
+            repeats every {meta.repeatHours}h
+          </span>
+        </div>
 
-        <Card className="mt-4 bg-white/80">
-          <CardHeader>
-            <CardTitle className="text-2xl">{meta.title}</CardTitle>
-            <CardDescription className="text-base">
-              {meta.shortDescription}
-            </CardDescription>
+        <h1 className="mt-3 text-xl font-semibold text-foreground">{meta.title}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{meta.shortDescription}</p>
 
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Badge>{meta.frequency}</Badge>
-              <Badge>{meta.estimateMinutes} min</Badge>
-              <Badge>{meta.difficulty}</Badge>
-              {meta.tags?.map((t) => (
-                <Badge key={t} className="text-muted-foreground">{t}</Badge>
-              ))}
-            </div>
-          </CardHeader>
-
-          <CardContent>
-            <div className="grid gap-6">
-              <section className="rounded-2xl border border-border bg-white p-5">
-                <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Steps
-                </div>
-                <div className="mt-3">
-                  <Mdx source={content} />
-                </div>
-              </section>
-
-              <section className="grid gap-3 md:grid-cols-2">
-                <div className="rounded-2xl border border-border bg-white p-5">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Supplies
-                  </div>
-                  <ul className="mt-3 list-disc pl-5 text-sm">
-                    {meta.supplies?.length ? meta.supplies.map((s) => <li key={s}>{s}</li>) : <li>None</li>}
-                  </ul>
-                </div>
-
-                <div className="rounded-2xl border border-border bg-white p-5">
-                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    <Zap size={14} className="text-primary" />
-                    Automation ideas
-                  </div>
-                  <ul className="mt-3 list-disc pl-5 text-sm">
-                    {meta.automation?.length ? meta.automation.map((a) => <li key={a}>{a}</li>) : <li>None yet</li>}
-                  </ul>
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    Note: Always follow manufacturer instructions and safety guidance.
-                  </p>
-                </div>
-              </section>
-
-              <div className="rounded-2xl border border-border bg-white p-5 text-xs text-muted-foreground">
-                Pro move: If this chore annoys you, automate the *reminder* first. Consistency beats intensity.
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="mt-4">
+          <Mdx source={content} />
+        </div>
       </div>
     </main>
   )
