@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* off-white background motif + dark grey text */
+  --background: 40 33% 97%;
+  --foreground: 220 12% 18%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 220 12% 18%;
+
+  --muted: 220 16% 94%;
+  --muted-foreground: 220 7% 45%;
+
+  /* light grey borders */
+  --border: 220 12% 88%;
+
+  /* radiant tech-blue accent */
+  --primary: 210 98% 55%;
+  --primary-foreground: 0 0% 100%;
+
+  --ring: 210 98% 55%;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
